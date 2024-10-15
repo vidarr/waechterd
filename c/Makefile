@@ -19,7 +19,7 @@ build/include:
 build/%.o: %.c build
 	$(CC) $(CFLAGS) -c $< -o $@
 
-build/waechter_message_parser_test: build/waechter_message_parser.o build/waechter_message_parser_test.o
+build/waechter_message_parser_test: build/waechter_message.o build/waechter_message_parser.o build/waechter_message_parser_test.o
 	$(CC) $(CFLAGS) $^ -o $@
 
 build/waechter_test: build/waechter_message_parser.o build/waechter_message.o build/waechter.o build/waechter_test.o

@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "test_helpers.c"
+#include <stdlib.h>
 
 /*----------------------------------------------------------------------------*/
 
@@ -89,4 +90,81 @@ static void test_w_parse_message() {
 
 /*----------------------------------------------------------------------------*/
 
-int main() { test_w_parse_message(); }
+static bool message_body_is(W_MessageBody body,
+                            W_MessageType type,
+                            char const *s1,
+                            char const *s2,
+                            char const *s3) {
+
+    fprintf(stderr, "\n\nExpected: %s\n", w_message_type_to_string(type));
+
+    if(body.type != type) {
+        return false;
+    } else {
+    switch (body.type) {
+
+        case W_INVALID:
+        case W_INCOMPLETE:
+        case W_RESPONSE_OK:
+        case W_RESPONSE_ERROR:
+            return true;
+
+        case W_REQUEST_AUTHENTICATE:
+
+            return strequal(body.authenticate.user, s1) &&
+            strequal(body.authenticate.method, s2) &&
+            strequal(body.authenticate.auth_info, s3);
+
+        case W_REQUEST_AUTHORIZE:
+
+            return strequal(body.authorize.resource, s1) &&
+            strequal(body.authorize.token, s2);
+
+        case W_RESPONSE_AUTHENTICATE_OK:
+
+            return strequal(body.authenticate_response.token, s1);
+
+    };
+
+}
+
+}
+
+/*----------------------------------------------------------------------------*/
+
+static W_Message make_message(W_MessageType type, char const *body) {
+
+    return (W_Message) {
+
+        .type = type,
+        .id = rand(),
+        .body = (char *)body,
+    };
+
+}
+
+/*----------------------------------------------------------------------------*/
+
+static void test_w_parse_authenticate() {
+
+    W_MessageBody w_parse_authenticate(W_Message msg);
+    assert(message_body_is(
+        w_parse_authenticate(make_message(W_INVALID, 0)), W_INVALID, 0, 0, 0));
+
+}
+
+/*----------------------------------------------------------------------------*/
+
+W_MessageBody w_parse_authenticate_response(W_Message msg);
+W_MessageBody parse_authorize(W_Message msg);
+
+bool w_encode_authenticate(char *target, size_t capacity, W_Authenticate opts);
+bool w_encode_authorize(char *target, size_t capacity, W_Authorize opts);
+
+int main() {
+
+    test_w_parse_message();
+    test_w_parse_authenticate();
+}
+
+/*----------------------------------------------------------------------------*/

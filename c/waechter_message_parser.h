@@ -32,48 +32,15 @@ extern W_ParsedMessage W_ParsedInvalid;
 
 /*----------------------------------------------------------------------------*/
 
-typedef struct {
-
-    char *data;
-
-} W_MessageOptions;
-
-typedef struct {
-
-    W_MessageOptions raw;
-
-    char const *method;
-    char const *user;
-    char const *auth_info;
-
-} W_Authenticate;
-
-typedef struct {
-
-    W_MessageOptions raw;
-
-    char *raw_copy;
-    char const *token;
-
-} W_AuthenticateResponse;
-
-typedef struct {
-
-    W_MessageOptions raw;
-
-    char const *token;
-    char const *resource;
-
-} W_Authorize;
-
-/*----------------------------------------------------------------------------*/
-
 W_ParsedMessage w_parse_message(char const *msg);
 
-W_Authenticate w_parse_authenticate(W_Message msg);
-W_AuthenticateResponse w_parse_authenticate_response(W_Message msg);
+/*****************************************************************************
+                                 message bodies
+ ****************************************************************************/
 
-W_Authorize parse_authorize(W_Message msg);
+W_MessageBody w_parse_authenticate(W_Message msg);
+W_MessageBody w_parse_authenticate_response(W_Message msg);
+W_MessageBody parse_authorize(W_Message msg);
 
 bool w_encode_authenticate(char *target, size_t capacity, W_Authenticate opts);
 bool w_encode_authorize(char *target, size_t capacity, W_Authorize opts);

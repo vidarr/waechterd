@@ -9,6 +9,7 @@
 #include <ctype.h>
 #include <inttypes.h>
 #include <stdlib.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------*/
 
@@ -31,8 +32,11 @@ static char const *strsan(char const *s1) { return (0 == s1) ? "" : s1; }
 /*----------------------------------------------------------------------------*/
 
 static char const *skip_to_end_of_word(char const *str) {
-    for (; (*str != 0) && (*str != ' '); ++str)
-        ;
+
+    if (0 != str) {
+        for (; (*str != 0) && (*str != ' '); ++str)
+            ;
+    }
     return str;
 }
 
@@ -272,37 +276,6 @@ static ParsedMessageType parse_message_type(char const *str) {
 
                 return invalid;
         }
-
-        // char c = toupper(str[0]);
-
-        // if(0 == c) {
-
-        //    return incomplete;
-
-        //} else if (c == 'R') {
-        //    return parse_response(str + 1);
-
-        //} else {
-        //    if (c != 'A') {
-        //        return invalid;
-
-        //    } else if ((0 == str[1]) || (0 == str[2]) || (0 == str[3]) ||
-        //               (0 == str[4])) {
-        //        return incomplete;
-        //    } else if (('U' != toupper(str[1])) || ('T' != toupper(str[2])) ||
-        //               ('H' != toupper(str[3]))) {
-        //        return invalid;
-
-        //    } else if ('E' == toupper(str[4])) {
-        //        return parse_authenticate_type(str + 5);
-
-        //    } else if ('O' == toupper(str[4])) {
-        //        return parse_authorize_type(str + 5);
-
-        //    } else {
-        //        return invalid;
-        //    }
-        //}
     }
 }
 
@@ -349,6 +322,80 @@ W_ParsedMessage w_parse_message(char const *msg) {
         }
     }
 }
+
+/*----------------------------------------------------------------------------*/
+
+W_MessageBody w_parse_authenticate(W_Message msg) {
+
+    W_MessageBody body = {
+        .type = W_INVALID,
+    };
+
+    if ((W_REQUEST_AUTHENTICATE == msg.type) && (0 != msg.body)) {
+
+        body.body_copy = strdup(msg.body);
+        body.authenticate.user = body.body_copy;
+
+        char *readptr = (char *)skip_to_end_of_word(body.body_copy);
+
+        if ('\n' == *readptr) {
+
+            body.type = W_INCOMPLETE;
+            *readptr = 0;
+
+        } else if (' ' == *readptr) {
+
+            *readptr = 0;
+            ++readptr;
+        }
+
+        readptr = (char *)skip_to_word(readptr);
+
+        body.authenticate.method = readptr;
+
+        readptr = (char *)skip_to_end_of_word(readptr);
+
+        if ('\n' == *readptr) {
+
+            body.type = W_INCOMPLETE;
+            *readptr = 0;
+
+        } else if (' ' == *readptr) {
+
+            *readptr = 0;
+            ++readptr;
+        }
+
+        readptr = (char *)skip_to_word(readptr);
+
+        body.authenticate.auth_info = readptr;
+
+        char *eol = 0;
+
+        if (eol_found(readptr, (char const **)&eol)) {
+
+            body.type = W_REQUEST_AUTHENTICATE;
+            *eol = 0;
+
+        } else {
+
+            body.type = W_INVALID;
+            body.authenticate.user = 0;
+            body.authenticate.method = 0;
+            body.authenticate.auth_info = 0;
+        }
+    }
+
+    return body;
+}
+
+/*----------------------------------------------------------------------------*/
+
+W_MessageBody w_parse_authenticate_response(W_Message msg);
+
+/*----------------------------------------------------------------------------*/
+
+W_MessageBody parse_authorize(W_Message msg);
 
 /*----------------------------------------------------------------------------*/
 
