@@ -147,7 +147,6 @@ static W_Message make_message(W_MessageType type, char const *body) {
 
 static void test_w_parse_authenticate() {
 
-    W_MessageBody w_parse_authenticate(W_Message msg);
     assert(message_body_is(
         w_parse_authenticate(make_message(W_INVALID, 0)), W_INVALID, 0, 0, 0));
 
